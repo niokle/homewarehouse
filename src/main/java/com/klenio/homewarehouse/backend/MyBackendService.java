@@ -43,5 +43,4 @@ public class MyBackendService {
     public List<MyProduct> getMyProducts() {
         return myProducts;
     }
-
 }

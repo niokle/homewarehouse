@@ -85,8 +85,9 @@ public class MyListView extends Div implements AfterNavigationObserver {
         });
 
         buttonAdd.addClickListener(e -> {
-            saveData();
-            Notification.show("Zapisano");
+            if (saveData()) {
+                Notification.show("Zapisano");
+            }
         });
 
         SplitLayout splitLayout = new SplitLayout();
@@ -98,7 +99,7 @@ public class MyListView extends Div implements AfterNavigationObserver {
         add(splitLayout);
     }
 
-    private void saveData() {
+    private boolean saveData() {
         if (activeMyProduct != null) {
             activeMyProduct.setDate(date.getValue());
             activeMyProduct.setName(name.getValue());
@@ -106,7 +107,9 @@ public class MyListView extends Div implements AfterNavigationObserver {
             activeMyProduct.setStatus(status.getValue());
             activeMyProduct = null;
             myProductGrid.setItems(service.getMyProducts());
+            return true;
         }
+        return false;
     }
 
     private void createEditorLayout(SplitLayout splitLayout) {
