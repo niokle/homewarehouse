@@ -1,0 +1,169 @@
+package com.klenio.homewarehouse.views.list;
+
+import com.klenio.homewarehouse.backend.MyBackendService;
+import com.klenio.homewarehouse.backend.MyProduct;
+import com.klenio.homewarehouse.views.main.MyMainView;
+import com.vaadin.flow.component.AbstractField;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.charts.events.ClickEvent;
+import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.router.*;
+import org.springframework.beans.factory.annotation.Autowired;
+
+@Route(value = "list", layout = MyMainView.class)
+@RouteAlias(value = "", layout = MyMainView.class)
+@PageTitle("Home Warehouse")
+@CssImport("styles/views/list/list-view.css")
+public class MyListView extends Div implements AfterNavigationObserver {
+    @Autowired
+    private MyBackendService service;
+
+    private Grid<MyProduct> myProductGrid;
+
+    private TextField date = new TextField();
+    private TextField name = new TextField();
+    private TextField place = new TextField();
+    private TextField status = new TextField();
+
+    private Button buttonInUse = new Button("W użyciu");
+    private Button buttonEaten = new Button("Zjedzone");
+    private Button buttonClear = new Button("Wyczyść");
+    private Button buttonAdd = new Button("Dodaj");
+
+    private Binder<MyProduct> binder;
+
+    private MyProduct activeMyProduct;
+
+    public MyListView() {
+        setId("list-view");
+        // Configure Grid
+        myProductGrid = new Grid<>();
+        myProductGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
+        myProductGrid.setHeightFull();
+        myProductGrid.addColumn(MyProduct::getDate).setHeader("Data");
+        myProductGrid.addColumn(MyProduct::getName).setHeader("Produkt");
+        myProductGrid.addColumn(MyProduct::getPlace).setHeader("Miejsce");
+        myProductGrid.addColumn(MyProduct::getStatus).setHeader("Status");
+
+        //when a row is selected or deselected, populate form
+        myProductGrid.asSingleSelect().addValueChangeListener(event -> populateForm(event.getValue()));
+
+        // Configure Form
+        binder = new Binder<>(MyProduct.class);
+
+        // Bind fields. This where you'd define e.g. validation rules
+        binder.bindInstanceFields(this);
+        // note that password field isn't bound since that property doesn't exist in
+        // Employee
+
+        // the grid valueChangeEvent will clear the form too
+        buttonClear.addClickListener(e -> myProductGrid.asSingleSelect().clear());
+
+        buttonInUse.addClickListener(e -> {
+            this.status.setValue("w użyciu");
+            this.buttonAdd.click();
+            this.buttonClear.click();
+            Notification.show("Zmieniono status na 'w użyciu'");
+        });
+
+        buttonEaten.addClickListener(e -> {
+            this.status.setValue("zjedzone");
+            this.buttonAdd.click();
+            this.buttonClear.click();
+            Notification.show("Zmieniono status na 'zjedzone'");
+        });
+
+        buttonAdd.addClickListener(e -> {
+            saveData();
+            Notification.show("Zapisano");
+        });
+
+        SplitLayout splitLayout = new SplitLayout();
+        splitLayout.setSizeFull();
+
+        createGridLayout(splitLayout);
+        createEditorLayout(splitLayout);
+
+        add(splitLayout);
+    }
+
+    private void saveData() {
+        if (activeMyProduct != null) {
+            activeMyProduct.setDate(date.getValue());
+            activeMyProduct.setName(name.getValue());
+            activeMyProduct.setPlace(place.getValue());
+            activeMyProduct.setStatus(status.getValue());
+            activeMyProduct = null;
+            myProductGrid.setItems(service.getMyProducts());
+        }
+    }
+
+    private void createEditorLayout(SplitLayout splitLayout) {
+        Div editorDiv = new Div();
+        editorDiv.setId("editor-layout");
+        FormLayout formLayout = new FormLayout();
+        addFormItem(editorDiv, formLayout, date, "Data");
+        addFormItem(editorDiv, formLayout, name, "Produkt");
+        addFormItem(editorDiv, formLayout, place, "Miejsce");
+        addFormItem(editorDiv, formLayout, status, "Status");
+        createButtonLayout(editorDiv);
+        splitLayout.addToSecondary(editorDiv);
+    }
+
+    private void createButtonLayout(Div editorDiv) {
+        //HorizontalLayout buttonLayout = new HorizontalLayout();
+        VerticalLayout buttonLayout = new VerticalLayout();
+        buttonLayout.setId("button-layout");
+        //buttonLayout.setWidthFull();
+        buttonLayout.setHeight("");
+        buttonLayout.setSpacing(true);
+        buttonInUse.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
+        buttonEaten.addThemeVariants(ButtonVariant.LUMO_ERROR);
+        buttonAdd.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        buttonClear.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
+        buttonLayout.add(buttonInUse, buttonEaten, buttonAdd, buttonClear);
+        editorDiv.add(buttonLayout);
+    }
+
+    private void createGridLayout(SplitLayout splitLayout) {
+        Div wrapper = new Div();
+        wrapper.setId("wrapper");
+        wrapper.setWidthFull();
+        splitLayout.addToPrimary(wrapper);
+        wrapper.add(myProductGrid);
+    }
+
+    private void addFormItem(Div wrapper, FormLayout formLayout,
+            AbstractField field, String fieldName) {
+        formLayout.addFormItem(field, fieldName);
+        wrapper.add(formLayout);
+        field.getElement().getClassList().add("full-width");
+    }
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+
+        // Lazy init of the grid items, happens only when we are sure the view will be
+        // shown to the user
+        myProductGrid.setItems(service.getMyProducts());
+    }
+
+    private void populateForm(MyProduct value) {
+        // Value can be null as well, that clears the form
+        binder.readBean(value);
+        activeMyProduct = value;
+        // The password field isn't bound through the binder, so handle that
+        //password.setValue("");
+    }
+}
