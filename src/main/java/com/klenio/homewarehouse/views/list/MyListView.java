@@ -1,18 +1,17 @@
 package com.klenio.homewarehouse.views.list;
 
 import com.klenio.homewarehouse.backend.MyBackendService;
+import com.klenio.homewarehouse.backend.MyExternalData;
 import com.klenio.homewarehouse.backend.MyProduct;
 import com.klenio.homewarehouse.views.main.MyMainView;
 import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.charts.events.ClickEvent;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
@@ -27,7 +26,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 @CssImport("styles/views/list/list-view.css")
 public class MyListView extends Div implements AfterNavigationObserver {
     @Autowired
-    private MyBackendService service;
+    private MyBackendService myBackendService;
+
+    @Autowired
+    private MyExternalData myExternalData;
 
     private Grid<MyProduct> myProductGrid;
 
@@ -87,6 +89,7 @@ public class MyListView extends Div implements AfterNavigationObserver {
         buttonAdd.addClickListener(e -> {
             if (saveData()) {
                 Notification.show("Zapisano");
+                myProductGrid.setItems(myBackendService.getMyProducts(myExternalData));
             }
         });
 
@@ -106,10 +109,25 @@ public class MyListView extends Div implements AfterNavigationObserver {
             activeMyProduct.setPlace(place.getValue());
             activeMyProduct.setStatus(status.getValue());
             activeMyProduct = null;
-            myProductGrid.setItems(service.getMyProducts());
+            myBackendService.setMyProducts(myExternalData);
             return true;
+        } else {
+            if (isCorrect()) {
+                Long newId = myBackendService.getMyProducts(myExternalData).stream().max((prod1, prod2) -> Long.compare(prod1.getId(), prod2.getId())).get().getId() + 1;
+                myBackendService.addMyProduct(new MyProduct(newId, date.getValue(), name.getValue(), place.getValue(), status.getValue()));
+                myBackendService.setMyProducts(myExternalData);
+                buttonClear.click();
+                return true;
+            } else {
+                Notification.show("Nie zapisano! Uzupełnij wszystkie pola!");
+                return false;
+            }
         }
-        return false;
+    }
+
+    private boolean isCorrect() {
+        return  date.getValue().length() > 0 && name.getValue().length() > 0 &&
+                place.getValue().length() > 0;
     }
 
     private void createEditorLayout(SplitLayout splitLayout) {
@@ -159,14 +177,12 @@ public class MyListView extends Div implements AfterNavigationObserver {
 
         // Lazy init of the grid items, happens only when we are sure the view will be
         // shown to the user
-        myProductGrid.setItems(service.getMyProducts());
+        myProductGrid.setItems(myBackendService.getMyProducts(myExternalData));
     }
 
     private void populateForm(MyProduct value) {
         // Value can be null as well, that clears the form
         binder.readBean(value);
         activeMyProduct = value;
-        // The password field isn't bound through the binder, so handle that
-        //password.setValue("");
     }
 }

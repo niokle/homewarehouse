@@ -1,15 +1,16 @@
 package com.klenio.homewarehouse.backend;
 
 import org.springframework.stereotype.Service;
-import java.time.LocalDate;
-import java.util.ArrayList;
+
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MyBackendService {
-
     private List<MyProduct> myProducts;
 
+    /*
     {
     // Init dummy data
 
@@ -40,7 +41,20 @@ public class MyBackendService {
         myProducts.add(new MyProduct(id++, "20201011","Cchaddie", "Spatarul",  "new"));
     }
 
-    public List<MyProduct> getMyProducts() {
+     */
+
+    private static String fileName = "products.txt";
+
+    public List<MyProduct> getMyProducts(MyExternalData myExternalData) {
+        myProducts = myExternalData.loadMyProducts(fileName).stream().sorted(Comparator.comparing(MyProduct::getDate)).collect(Collectors.toList());
         return myProducts;
+    }
+
+    public void addMyProduct(MyProduct myProduct) {
+        myProducts.add(myProduct);
+    }
+
+    public void setMyProducts(MyExternalData myExternalData) {
+        myExternalData.saveMyProducts(myProducts, fileName);
     }
 }
