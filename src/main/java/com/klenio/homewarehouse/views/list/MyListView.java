@@ -95,6 +95,7 @@ public class MyListView extends Div implements AfterNavigationObserver {
 
         SplitLayout splitLayout = new SplitLayout();
         splitLayout.setSizeFull();
+        splitLayout.setOrientation(SplitLayout.Orientation.VERTICAL);
 
         createGridLayout(splitLayout);
         createEditorLayout(splitLayout);
