@@ -47,7 +47,7 @@ public class MyBackendService {
 
     public List<MyProduct> getMyProducts(MyExternalData myExternalData) {
         myProducts = myExternalData.loadMyProducts(fileName).stream().sorted(Comparator.comparing(MyProduct::getDate)).collect(Collectors.toList());
-        return myProducts;
+        return myProducts.stream().filter(myProduct -> !myProduct.getStatus().equals("zjedzone")).collect(Collectors.toList());
     }
 
     public void addMyProduct(MyProduct myProduct) {
