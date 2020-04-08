@@ -56,10 +56,10 @@ public class MyListView extends Div implements AfterNavigationObserver {
         myProductGrid = new Grid<>();
         myProductGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
         myProductGrid.setHeightFull();
-        myProductGrid.addColumn(MyProduct::getDate).setHeader("Data");
-        myProductGrid.addColumn(MyProduct::getName).setHeader("Produkt");
-        myProductGrid.addColumn(MyProduct::getPlace).setHeader("Miejsce");
-        myProductGrid.addColumn(MyProduct::getStatus).setHeader("Status");
+        myProductGrid.addColumn(MyProduct::getDate).setHeader("Data").setAutoWidth(true);
+        myProductGrid.addColumn(MyProduct::getName).setHeader("Produkt").setAutoWidth(true);
+        myProductGrid.addColumn(MyProduct::getPlace).setHeader("Miejsce").setAutoWidth(true);
+        myProductGrid.addColumn(MyProduct::getStatus).setHeader("Status").setAutoWidth(true);
 
         //when a row is selected or deselected, populate form
         myProductGrid.asSingleSelect().addValueChangeListener(event -> populateForm(event.getValue()));
