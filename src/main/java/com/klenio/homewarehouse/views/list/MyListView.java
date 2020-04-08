@@ -13,6 +13,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -47,6 +48,8 @@ public class MyListView extends Div implements AfterNavigationObserver {
 
     private MyProduct activeMyProduct;
 
+    private Notification notification;
+
     public MyListView() {
         setId("list-view");
         // Configure Grid
@@ -77,9 +80,10 @@ public class MyListView extends Div implements AfterNavigationObserver {
                 this.status.setValue("w użyciu");
                 this.buttonAdd.click();
                 this.buttonClear.click();
-                Notification.show("Zmieniono status na 'w użyciu'");
+                notificationShow("Zmieniono status na 'w użyciu'", NotificationVariant.LUMO_SUCCESS);
+            } else {
+                notificationShow("Nie wybrano produktu", NotificationVariant.LUMO_ERROR);
             }
-            Notification.show("Nie wybrano produktu");
         });
 
         buttonEaten.addClickListener(e -> {
@@ -87,14 +91,15 @@ public class MyListView extends Div implements AfterNavigationObserver {
                 this.status.setValue("zjedzone");
                 this.buttonAdd.click();
                 this.buttonClear.click();
-                Notification.show("Zmieniono status na 'zjedzone'");
+                notificationShow("Zmieniono status na 'zjedzone'", NotificationVariant.LUMO_SUCCESS);
+            } else {
+                notificationShow("Nie wybrano produktu", NotificationVariant.LUMO_ERROR);
             }
-            Notification.show("Nie wybrano produktu");
         });
 
         buttonAdd.addClickListener(e -> {
             if (saveData()) {
-                Notification.show("Zapisano");
+                notificationShow("Zapisano", NotificationVariant.LUMO_SUCCESS);
                 myProductGrid.setItems(myBackendService.getMyProducts(myExternalData));
             }
         });
@@ -107,6 +112,14 @@ public class MyListView extends Div implements AfterNavigationObserver {
         createEditorLayout(splitLayout);
 
         add(splitLayout);
+    }
+
+    private void notificationShow(String text, NotificationVariant notificationVariant) {
+        notification = new Notification();
+        notification.addThemeVariants(notificationVariant);
+        notification.add(text);
+        notification.setDuration(1000);
+        notification.open();
     }
 
     private boolean isActiveMyProduct() {
@@ -130,7 +143,7 @@ public class MyListView extends Div implements AfterNavigationObserver {
                 buttonClear.click();
                 return true;
             } else {
-                Notification.show("Nie zapisano! Uzupełnij wszystkie pola!");
+                notificationShow("Nie zapisano! Uzupełnij wszystkie pola!", NotificationVariant.LUMO_ERROR);
                 return false;
             }
         }
