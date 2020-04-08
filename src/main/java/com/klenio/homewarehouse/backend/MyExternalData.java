@@ -6,10 +6,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Component;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,13 +15,13 @@ public class MyExternalData {
     public List<MyProduct> loadMyProducts(String fileName) {
         List<MyProduct> myProducts = new ArrayList<>();
         JSONParser jsonParser = new JSONParser();
-
         try (FileReader reader = new FileReader(fileName))
         {
             Object obj = jsonParser.parse(reader);
             JSONArray myProductsList = (JSONArray) obj;
             myProductsList.forEach( myProduct -> myProducts.add(parseMyProductObject((JSONObject) myProduct )));
         } catch (FileNotFoundException e) {
+            System.out.println("Ścieżka do pliku: " + new File("products.txt").getAbsoluteFile());
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();

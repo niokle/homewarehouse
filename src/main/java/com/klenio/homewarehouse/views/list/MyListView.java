@@ -13,7 +13,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
@@ -73,17 +73,23 @@ public class MyListView extends Div implements AfterNavigationObserver {
         buttonClear.addClickListener(e -> myProductGrid.asSingleSelect().clear());
 
         buttonInUse.addClickListener(e -> {
-            this.status.setValue("w użyciu");
-            this.buttonAdd.click();
-            this.buttonClear.click();
-            Notification.show("Zmieniono status na 'w użyciu'");
+            if (isActiveMyProduct()) {
+                this.status.setValue("w użyciu");
+                this.buttonAdd.click();
+                this.buttonClear.click();
+                Notification.show("Zmieniono status na 'w użyciu'");
+            }
+            Notification.show("Nie wybrano produktu");
         });
 
         buttonEaten.addClickListener(e -> {
-            this.status.setValue("zjedzone");
-            this.buttonAdd.click();
-            this.buttonClear.click();
-            Notification.show("Zmieniono status na 'zjedzone'");
+            if (isActiveMyProduct()) {
+                this.status.setValue("zjedzone");
+                this.buttonAdd.click();
+                this.buttonClear.click();
+                Notification.show("Zmieniono status na 'zjedzone'");
+            }
+            Notification.show("Nie wybrano produktu");
         });
 
         buttonAdd.addClickListener(e -> {
@@ -101,6 +107,10 @@ public class MyListView extends Div implements AfterNavigationObserver {
         createEditorLayout(splitLayout);
 
         add(splitLayout);
+    }
+
+    private boolean isActiveMyProduct() {
+        return activeMyProduct != null;
     }
 
     private boolean saveData() {
@@ -133,19 +143,20 @@ public class MyListView extends Div implements AfterNavigationObserver {
 
     private void createEditorLayout(SplitLayout splitLayout) {
         Div editorDiv = new Div();
+        createButtonLayout(editorDiv);
         editorDiv.setId("editor-layout");
         FormLayout formLayout = new FormLayout();
         addFormItem(editorDiv, formLayout, date, "Data");
         addFormItem(editorDiv, formLayout, name, "Produkt");
         addFormItem(editorDiv, formLayout, place, "Miejsce");
         addFormItem(editorDiv, formLayout, status, "Status");
-        createButtonLayout(editorDiv);
         splitLayout.addToSecondary(editorDiv);
+        splitLayout.setSplitterPosition(80);
     }
 
     private void createButtonLayout(Div editorDiv) {
-        //HorizontalLayout buttonLayout = new HorizontalLayout();
-        VerticalLayout buttonLayout = new VerticalLayout();
+        HorizontalLayout buttonLayout = new HorizontalLayout();
+        //VerticalLayout buttonLayout = new VerticalLayout();
         buttonLayout.setId("button-layout");
         //buttonLayout.setWidthFull();
         buttonLayout.setHeight("");
@@ -154,7 +165,7 @@ public class MyListView extends Div implements AfterNavigationObserver {
         buttonEaten.addThemeVariants(ButtonVariant.LUMO_ERROR);
         buttonAdd.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         buttonClear.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
-        buttonLayout.add(buttonInUse, buttonEaten, buttonAdd, buttonClear);
+        buttonLayout.add(buttonAdd, buttonInUse, buttonEaten, buttonClear);
         editorDiv.add(buttonLayout);
     }
 
