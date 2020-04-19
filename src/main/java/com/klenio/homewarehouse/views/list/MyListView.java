@@ -39,6 +39,8 @@ public class MyListView extends Div implements AfterNavigationObserver {
     private TextField place = new TextField();
     private TextField status = new TextField();
 
+    private TextField search = new TextField();
+
     private Button buttonInUse = new Button("W użyciu");
     private Button buttonEaten = new Button("Zjedzone");
     private Button buttonClear = new Button("Wyczyść");
@@ -100,7 +102,7 @@ public class MyListView extends Div implements AfterNavigationObserver {
         buttonAdd.addClickListener(e -> {
             if (saveData()) {
                 notificationShow("Zapisano", NotificationVariant.LUMO_SUCCESS);
-                myProductGrid.setItems(myBackendService.getMyProducts(myExternalData));
+                loadFullOrFilteredList();
             }
         });
 
@@ -156,6 +158,7 @@ public class MyListView extends Div implements AfterNavigationObserver {
 
     private void createEditorLayout(SplitLayout splitLayout) {
         Div editorDiv = new Div();
+        searchLayout(editorDiv);
         createButtonLayout(editorDiv);
         editorDiv.setId("editor-layout");
         FormLayout formLayout = new FormLayout();
@@ -202,12 +205,42 @@ public class MyListView extends Div implements AfterNavigationObserver {
 
         // Lazy init of the grid items, happens only when we are sure the view will be
         // shown to the user
-        myProductGrid.setItems(myBackendService.getMyProducts(myExternalData));
+        loadFullOrFilteredList();
+        //todo
+        test();
     }
 
     private void populateForm(MyProduct value) {
         // Value can be null as well, that clears the form
         binder.readBean(value);
         activeMyProduct = value;
+    }
+
+    //todo
+    private void test() {
+        //com.vaadin.flow.component.grid.
+    }
+
+    private void searchLayout(Div editorDiv) {
+        FormLayout formLayout = new FormLayout();
+        addFormItem(editorDiv, formLayout, search, "Szukaj");
+        search.addValueChangeListener(e -> loadFilteredList());
+        search.setClearButtonVisible(true);
+    }
+
+    private void loadFilteredList() {
+        myProductGrid.setItems(myBackendService.getMyFilteredProducts(myExternalData, search.getValue()));
+    }
+
+    private void loadFullList() {
+        myProductGrid.setItems(myBackendService.getMyProducts(myExternalData));
+    }
+
+    private void loadFullOrFilteredList() {
+        if (search.getValue().length() > 0) {
+            loadFilteredList();
+        } else {
+            loadFullList();
+        }
     }
 }
