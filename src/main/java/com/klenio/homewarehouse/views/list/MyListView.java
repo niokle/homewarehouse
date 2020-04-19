@@ -224,7 +224,10 @@ public class MyListView extends Div implements AfterNavigationObserver {
     private void searchLayout(Div editorDiv) {
         FormLayout formLayout = new FormLayout();
         addFormItem(editorDiv, formLayout, search, "Szukaj");
-        search.addValueChangeListener(e -> loadFilteredList());
+        search.addValueChangeListener(e -> {
+            loadFullOrFilteredList();
+            search.blur();
+        });
         search.setClearButtonVisible(true);
     }
 
